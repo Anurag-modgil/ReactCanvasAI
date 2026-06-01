@@ -1,0 +1,94 @@
+{
+  "name": "reactcanvas-ai",
+  "displayName": "ReactCanvas AI (VisualCursor)",
+  "description": "Visual React Editor inside VS Code powered by AI. Edit React + Tailwind applications visually.",
+  "version": "0.1.0",
+  "publisher": "reactcanvas",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "reactcanvas-ai.openEditor",
+        "title": "ReactCanvas: Open Live Editor",
+        "category": "ReactCanvas"
+      }
+    ],
+    "configuration": {
+      "title": "ReactCanvas AI",
+      "properties": {
+        "reactcanvas-ai.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API Key for AI edits."
+        },
+        "reactcanvas-ai.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API Key for Claude. (Recommended)"
+        },
+        "reactcanvas-ai.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Gemini API Key for AI edits."
+        },
+        "reactcanvas-ai.openaiModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "OpenAI model to use."
+        },
+        "reactcanvas-ai.anthropicModel": {
+          "type": "string",
+          "default": "claude-3-5-sonnet-20241022",
+          "description": "Anthropic model to use."
+        },
+        "reactcanvas-ai.geminiModel": {
+          "type": "string",
+          "default": "gemini-1.5-pro",
+          "description": "Gemini model to use."
+        },
+        "reactcanvas-ai.devServerUrl": {
+          "type": "string",
+          "default": "http://localhost:5173",
+          "description": "Default URL of the React development server."
+        },
+        "reactcanvas-ai.proxyPort": {
+          "type": "integer",
+          "default": 9900,
+          "description": "Port to run the ReactCanvas proxy server on."
+        },
+        "reactcanvas-ai.wsPort": {
+          "type": "integer",
+          "default": 9901,
+          "description": "Port to run the ReactCanvas WebSocket communication server on."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npx esbuild src/compiler-plugin.ts --bundle --platform=node --format=cjs --outfile=out/compiler-plugin.js",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "echo \"No lint script specified\"",
+    "test": "echo \"No tests specified\""
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/vscode": "^1.75.0",
+    "@types/ws": "^8.5.4",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.21.2",
+    "@babel/types": "^7.21.2",
+    "recast": "^0.23.1",
+    "ws": "^8.13.0"
+  }
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReactCanvas AI (VisualCursor)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Action Bar -->
+    <header class="top-bar">
+      <div class="logo-area">
+        <span class="logo-glow"></span>
+        <span class="logo-text">VisualCursor</span>
+        <span class="tag-mvp">v1.0 MVP</span>
+      </div>
+      
+      <div class="server-config">
+        <div class="input-group">
+          <label for="dev-server-url">Dev URL:</label>
+          <input type="text" id="dev-server-url" value="http://localhost:5173" placeholder="http://localhost:5173" />
+        </div>
+        <button id="btn-connect" class="btn btn-primary-glow">Connect</button>
+        <span class="status-indicator disconnected" id="status-badge">Disconnected</span>
+      </div>
+
+      <div class="controls">
+        <button id="btn-inspect" class="btn btn-icon btn-toggle" title="Toggle Inspect Mode">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M4 4h7v2H6v5H4V4zm16 0v7h-2V6h-5V4h7zM4 20v-7h2v5h5v2H4zm16 0h-7v-2h5v-5h2v7zM12 8a4 4 0 100 8 4 4 0 000-8z"/>
+          </svg>
+          <span>Inspect</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <button id="btn-undo" class="btn btn-icon btn-secondary" title="Undo visual changes" disabled>
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+          </svg>
+        </button>
+
+        <button id="btn-redo" class="btn btn-icon btn-secondary" title="Redo reverted changes" disabled>
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M18.4 10.6C16.55 9 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/>
+          </svg>
+        </button>
+
+        <button id="btn-restore" class="btn btn-secondary" title="Restore back to saved file version" disabled>
+          Restore Original
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      <!-- Left side: Live Preview Frame -->
+      <section class="preview-panel">
+        <div class="panel-header">
+          <span class="panel-title">Interactive Live Preview</span>
+          <div class="browser-address-bar" id="browser-address">http://localhost:9900/</div>
+        </div>
+        <div class="iframe-wrapper">
+          <iframe id="preview-iframe" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+          <div class="iframe-placeholder" id="iframe-placeholder">
+            <div class="placeholder-content">
+              <svg viewBox="0 0 24 24" width="48" height="48" class="pulse-icon">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="#6366f1"/>
+              </svg>
+              <h3>Start Your React Application</h3>
+              <p>Type your dev server URL above (e.g. localhost:5173) and click <strong>Connect</strong> to launch the interactive workspace.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right side: Visual Editor Control Panel -->
+      <aside class="editor-sidebar">
+        <!-- Hierarchy Section -->
+        <div class="sidebar-section">
+          <h4 class="section-title">Component Hierarchy</h4>
+          <div class="hierarchy-container">
+            <div id="hierarchy-tree" class="hierarchy-tree">
+              <span class="empty-state">No component selected. Use inspect click inside the preview to select.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Property Editor Section -->
+        <div class="sidebar-section">
+          <div class="section-header">
+            <h4 class="section-title">Visual Properties</h4>
+            <span class="badge" id="selected-component-badge">None</span>
+          </div>
+
+          <div class="properties-panel" id="properties-panel">
+            <!-- Text Content -->
+            <div class="prop-group">
+              <label class="prop-label" for="prop-text">Text Content</label>
+              <textarea id="prop-text" rows="2" class="form-input text-mono" placeholder="Select an element to edit text..." disabled></textarea>
+            </div>
+
+            <!-- Tailwinds Class Inputs -->
+            <div class="prop-group">
+              <label class="prop-label" for="prop-classes">Tailwind Classes</label>
+              <textarea id="prop-classes" rows="3" class="form-input text-mono" placeholder="Select an element to edit styles..." disabled></textarea>
+            </div>
+
+            <!-- Visual Spacing Box Model (Inputs) -->
+            <div class="prop-row">
+              <div class="prop-col">
+                <label class="prop-label">Padding</label>
+                <div class="spacing-grid">
+                  <input type="text" id="p-all" placeholder="p-*" title="Padding all" class="form-input" disabled />
+                  <input type="text" id="px" placeholder="px-*" title="Padding X" class="form-input" disabled />
+                  <input type="text" id="py" placeholder="py-*" title="Padding Y" class="form-input" disabled />
+                </div>
+              </div>
+              <div class="prop-col">
+                <label class="prop-label">Margin</label>
+                <div class="spacing-grid">
+                  <input type="text" id="m-all" placeholder="m-*" title="Margin all" class="form-input" disabled />
+                  <input type="text" id="mx" placeholder="mx-*" title="Margin X" class="form-input" disabled />
+                  <input type="text" id="my" placeholder="my-*" title="Margin Y" class="form-input" disabled />
+                </div>
+              </div>
+            </div>
+
+            <!-- Size Box -->
+            <div class="prop-row">
+              <div class="prop-col">
+                <label class="prop-label" for="size-w">Width</label>
+                <input type="text" id="size-w" placeholder="w-*" class="form-input" disabled />
+              </div>
+              <div class="prop-col">
+                <label class="prop-label" for="size-h">Height</label>
+                <input type="text" id="size-h" placeholder="h-*" class="form-input" disabled />
+              </div>
+            </div>
+
+            <!-- Typography & Theme -->
+            <div class="prop-row">
+              <div class="prop-col">
+                <label class="prop-label" for="font-size">Font Size</label>
+                <select id="font-size" class="form-select" disabled>
+                  <option value="">default</option>
+                  <option value="text-xs">text-xs</option>
+                  <option value="text-sm">text-sm</option>
+                  <option value="text-base">text-base</option>
+                  <option value="text-lg">text-lg</option>
+                  <option value="text-xl">text-xl</option>
+                  <option value="text-2xl">text-2xl</option>
+                  <option value="text-3xl">text-3xl</option>
+                  <option value="text-4xl">text-4xl</option>
+                </select>
+              </div>
+              <div class="prop-col">
+                <label class="prop-label" for="border-radius">Border Radius</label>
+                <select id="border-radius" class="form-select" disabled>
+                  <option value="">default</option>
+                  <option value="rounded-none">rounded-none</option>
+                  <option value="rounded-sm">rounded-sm</option>
+                  <option value="rounded">rounded</option>
+                  <option value="rounded-md">rounded-md</option>
+                  <option value="rounded-lg">rounded-lg</option>
+                  <option value="rounded-xl">rounded-xl</option>
+                  <option value="rounded-full">rounded-full</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Color Palette Helpers -->
+            <div class="prop-row">
+              <div class="prop-col">
+                <label class="prop-label" for="bg-color">Bg Color</label>
+                <input type="text" id="bg-color" placeholder="bg-blue-500" class="form-input" disabled />
+              </div>
+              <div class="prop-col">
+                <label class="prop-label" for="text-color">Text Color</label>
+                <input type="text" id="text-color" placeholder="text-white" class="form-input" disabled />
+              </div>
+            </div>
+
+            <button id="btn-apply-props" class="btn btn-success btn-full" disabled>Apply Style Changes</button>
+          </div>
+        </div>
+
+        <!-- AI Assistant & Safety Plan Section -->
+        <div class="sidebar-section ai-section">
+          <h4 class="section-title">AI Visual Assistant</h4>
+          
+          <div class="ai-container">
+            <div class="scope-lock-wrapper">
+              <label class="switch-container">
+                <input type="checkbox" id="scope-lock" checked>
+                <span class="switch-slider"></span>
+              </label>
+              <span class="scope-label" title="When locked, AI modifications are restricted solely to the selected file.">Scope Lock: Selected File Only</span>
+            </div>
+
+            <div class="ai-chat-history" id="chat-history">
+              <div class="chat-message system">
+                I am your front-end pilot. Click any element in the preview and describe changes you'd like to apply.
+              </div>
+            </div>
+
+            <!-- Loading overlay inside chat -->
+            <div class="ai-loading" id="ai-loading">
+              <div class="spinner"></div>
+              <span>Analyzing context & generating code changes...</span>
+            </div>
+
+            <!-- Diff Approval Screen -->
+            <div class="diff-container" id="diff-container">
+              <div class="diff-header">
+                <span>Proposed Code Diff</span>
+                <span class="diff-filename" id="diff-filename">Component.tsx</span>
+              </div>
+              <pre class="diff-code" id="diff-code"><code></code></pre>
+              <div class="diff-actions">
+                <button id="btn-diff-reject" class="btn btn-secondary btn-half">Discard</button>
+                <button id="btn-diff-accept" class="btn btn-success btn-half">Approve & Apply</button>
+              </div>
+            </div>
+
+            <div class="ai-input-area" id="ai-input-area">
+              <textarea id="ai-prompt" rows="2" class="form-input" placeholder="Type instructions: 'Make this dark mode', 'center layout', 'add glassmorphism style'..." disabled></textarea>
+              <button id="btn-ask-ai" class="btn btn-primary" disabled>Generate Diff</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="editor.js"></script>
+</body>
+</html>
