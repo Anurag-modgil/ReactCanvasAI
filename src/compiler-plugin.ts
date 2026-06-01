@@ -1,5 +1,25 @@
 import * as recast from 'recast';
-const babelParser = require('recast/parsers/babel');
+import { parse as babelParse } from '@babel/parser';
+
+const tsxParser = {
+  parse(source: string) {
+    return babelParse(source, {
+      sourceType: 'module',
+      allowImportExportEverywhere: true,
+      allowReturnOutsideFunction: true,
+      tokens: true, // IMPORTANT for Recast comment/formatting retention
+      plugins: [
+        'jsx',
+        'typescript',
+        'decorators-legacy',
+        'classProperties',
+        'classPrivateProperties',
+        'classPrivateMethods',
+        'exportDefaultFrom'
+      ]
+    });
+  }
+};
 
 /**
  * Transforms JSX source code by injecting data-rc-file, data-rc-line, and data-rc-column attributes.
@@ -11,7 +31,7 @@ export function transformJSX(code: string, filePath: string): string {
   }
 
   try {
-    const ast = recast.parse(code, { parser: babelParser });
+    const ast = recast.parse(code, { parser: tsxParser });
     const builders = recast.types.builders;
 
     recast.visit(ast, {

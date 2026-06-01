@@ -1,5 +1,25 @@
 import * as recast from 'recast';
-const babelParser = require('recast/parsers/babel');
+import { parse as babelParse } from '@babel/parser';
+
+const tsxParser = {
+  parse(source: string) {
+    return babelParse(source, {
+      sourceType: 'module',
+      allowImportExportEverywhere: true,
+      allowReturnOutsideFunction: true,
+      tokens: true, // IMPORTANT for Recast comment/formatting retention
+      plugins: [
+        'jsx',
+        'typescript',
+        'decorators-legacy',
+        'classProperties',
+        'classPrivateProperties',
+        'classPrivateMethods',
+        'exportDefaultFrom'
+      ]
+    });
+  }
+};
 
 /**
  * Checks if a JSX opening element matches the specified line and column.
@@ -23,7 +43,7 @@ function isMatchingElement(node: any, line: number, column: number): boolean {
  * Safely updates or adds the `className` attribute of a JSX element at the specified line and column.
  */
 export function updateElementClasses(sourceCode: string, line: number, column: number, newClasses: string): string {
-  const ast = recast.parse(sourceCode, { parser: babelParser });
+  const ast = recast.parse(sourceCode, { parser: tsxParser });
   let modified = false;
 
   recast.visit(ast, {
@@ -87,7 +107,7 @@ export function updateElementClasses(sourceCode: string, line: number, column: n
  * Safely updates the text content of a JSX element at the specified line and column.
  */
 export function updateElementText(sourceCode: string, line: number, column: number, newText: string): string {
-  const ast = recast.parse(sourceCode, { parser: babelParser });
+  const ast = recast.parse(sourceCode, { parser: tsxParser });
   let modified = false;
 
   recast.visit(ast, {
@@ -142,7 +162,7 @@ export function updateElementStyles(
   column: number,
   newStyles: Record<string, string | number>
 ): string {
-  const ast = recast.parse(sourceCode, { parser: babelParser });
+  const ast = recast.parse(sourceCode, { parser: tsxParser });
   let modified = false;
 
   recast.visit(ast, {
